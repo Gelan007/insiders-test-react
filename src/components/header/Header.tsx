@@ -1,21 +1,36 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import s from "./Header.module.scss"
-import {Button} from "@mui/material";
-import {NavLink} from "react-router-dom";
-import {EDIT_USERS_ROUTE, USERS_ROUTE} from "../../utils/routes/routes";
+import {Button, Tab, Tabs} from "@mui/material";
+import {NavLink, useLocation} from "react-router-dom";
+import {Routes} from "../../utils/routes/routes";
 
 const Header = () => {
+    const location = useLocation();
+    const [value, setValue] = useState(location.pathname);
+
+    const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
+        setValue(newValue);
+    };
+
     return (
         <div className={s.header}>
             <div className={s.header__content}>
-                <Button variant="contained" sx={{ backgroundColor: '#b6b6b6', color: 'black' }}>
-                    <NavLink to={EDIT_USERS_ROUTE}>Edit Users</NavLink>
-                </Button>
-                <Button variant="contained" sx={{ backgroundColor: '#ffffff', color: 'black' }}>
-                    <NavLink to={USERS_ROUTE}>Users</NavLink>v
-                </Button>
+                <Tabs value={value} onChange={handleTabChange}>
+                    <Tab
+                        label="Edit Users"
+                        value={Routes.EDIT_USERS}
+                        component={NavLink}
+                        to={Routes.EDIT_USERS}
+                    />
+                    <Tab
+                        label="Users"
+                        value={Routes.USERS}
+                        component={NavLink}
+                        to={Routes.USERS}
+                    />
+                </Tabs>
             </div>
-            <hr className={s.header__hr}/>
+            <hr className={s.header__hr} />
         </div>
     );
 };

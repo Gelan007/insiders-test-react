@@ -3,15 +3,15 @@ import s from "./EditUsersTable.module.scss";
 import { Box, Button, FormControl, InputLabel, MenuItem, Select, SelectChangeEvent, TextField } from "@mui/material";
 import { UserWithId } from "../../interfaces/User";
 import {getUsersWithId, USERS} from "../../data/users";
-
-const LOCAL_STORAGE_KEY = "usersData";
+import {localstorageUsers} from "../../utils/localstorage/localstorage";
 
 const EditUsersTable = () => {
     const [users, setUsers] = React.useState<UserWithId[]>([]);
     const [selectedUser, setSelectedUser] = React.useState<UserWithId | undefined>(undefined);
     const uniqueStatuses = Array.from(new Set(users.map(user => user.status.name)));
+
     useEffect(() => {
-        const storedUsers = localStorage.getItem(LOCAL_STORAGE_KEY);
+        const storedUsers = localstorageUsers.getUsers();
         if (storedUsers) {
             setUsers(JSON.parse(storedUsers));
         } else {
@@ -38,7 +38,7 @@ const EditUsersTable = () => {
     const handleSave = () => {
         const updatedUsers = users.map(user => user.id === selectedUser?.id ? selectedUser : user);
         setUsers(updatedUsers);
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedUsers));
+        localstorageUsers.addUsers(updatedUsers);
     };
 
     const undo = () => {

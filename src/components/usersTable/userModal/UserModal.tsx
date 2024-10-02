@@ -47,16 +47,7 @@ const UserModal: React.FC<AddUserModalProps> = (
         handleTextFieldChange,
         handleSelectChange
     }) => {
-    const [isAvailableToAdd, setIsAvailableToAdd] = useState<boolean>(false);
-
-    useEffect(() => {
-        setIsAvailableToAdd(checkIsAvailableToAdd)
-    }, [newUser]);
-
-
-
-    const checkIsAvailableToAdd = (): boolean => !!(newUser?.status && newUser?.country && newUser?.name && newUser?.department);
-
+    const isAvailableToAdd = !!(newUser?.status && newUser?.country && newUser?.name && newUser?.department);
 
     return (
         <Modal open={open} onClose={onClose}>
@@ -67,7 +58,7 @@ const UserModal: React.FC<AddUserModalProps> = (
                         fullWidth
                         label="Full Name"
                         variant="outlined"
-                        value={newUser}
+                        value={newUser?.name}
                         onChange={handleTextFieldChange}
                     />
                     <FormControl fullWidth>
@@ -119,7 +110,7 @@ const UserModal: React.FC<AddUserModalProps> = (
 
                 <Box display="flex" justifyContent="flex-end" mt={3}>
                     <Button onClick={onClose} sx={{ mr: 2 }}>Cancel</Button>
-                    <Button variant="contained" color="primary" onClick={onAddUser} disabled={isAvailableToAdd}>Add</Button>
+                    <Button variant="contained" color="primary" onClick={onAddUser} disabled={!isAvailableToAdd}>Add</Button>
                 </Box>
             </Box>
         </Modal>

@@ -23,7 +23,7 @@ import { UserWithId } from '../../interfaces/User';
 import { getUsersWithId } from "../../data/users";
 import { localstorageUsers } from "../../utils/localstorage/localstorage";
 import UserModal from "./userModal/UserModal";
-import {logDOM} from "@testing-library/react";
+import { v4 as uuidv4 } from 'uuid';
 
 
 
@@ -42,7 +42,14 @@ const UsersTable = () => {
     const [users, setUsers] = useState<UserWithId[]>([]);
     const [filteredUsers, setFilteredUsers] = useState<UserWithId[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [newUser,setNewUser] = useState<UserWithId>();
+    const emptyUser = {
+        id: uuidv4(),
+        name: '',
+        department: { name: '', value: '' },
+        country: { name: '', value: '' },
+        status: { name: '', value: '' }
+    }
+    const [newUser, setNewUser] = useState<UserWithId>(emptyUser);
 
     useEffect(() => {
         const storedUsers = localstorageUsers.getUsers();
@@ -98,22 +105,28 @@ const UsersTable = () => {
 
     const handleTextFieldChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = event.target;
-        setNewUser(prev => (prev ? { ...prev, name: value } : undefined));
+        setNewUser(prev => ({
+            ...prev,
+            name: value,
+        }));
     };
 
     const handleSelectChange = (event: SelectChangeEvent, field: 'status' | 'department' | 'country') => {
         const value = event.target.value;
-        setNewUser(prev => (prev ? { ...prev, [field]: { value, name: value } } : undefined));
+        setNewUser(prev => ({
+            ...prev,
+            [field]: { value, name: value },
+        }));
     };
 
+
     const handleAddNewUser = () => {
-        console.log(newUser)
         if (newUser) {
             const updatedUsers = [...users, newUser];
             setUsers(updatedUsers);
             localstorageUsers.addUsers(updatedUsers);
-            console.log(updatedUsers)
         }
+        setNewUser(emptyUser)
         setIsModalOpen(false);
     };
 

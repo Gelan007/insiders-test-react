@@ -1,4 +1,5 @@
 import {User, UserWithId} from "../interfaces/User";
+import { v4 as uuidv4 } from 'uuid';
 
 export const USERS: User[] =
     [
@@ -187,6 +188,6 @@ export const USERS: User[] =
 export function getUsersWithId ():  UserWithId[] {
     return USERS.map((user, index) => ({
         ...user,
-        id: String(index + 1)
+        id: uuidv4()
     }));
 }

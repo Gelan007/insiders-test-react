@@ -22,8 +22,12 @@ import AddIcon from '@mui/icons-material/Add';
 import { UserWithId } from '../../interfaces/User';
 import { getUsersWithId } from "../../data/users";
 import { localstorageUsers } from "../../utils/localstorage/localstorage";
+import UserModal from "./userModal/UserModal";
+import {logDOM} from "@testing-library/react";
 
-const UserManagement = () => {
+
+
+const UsersTable = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedFilters, setSelectedFilters] = useState({
         departments: [] as string[],
@@ -37,6 +41,8 @@ const UserManagement = () => {
     });
     const [users, setUsers] = useState<UserWithId[]>([]);
     const [filteredUsers, setFilteredUsers] = useState<UserWithId[]>([]);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [newUser,setNewUser] = useState<UserWithId>();
 
     useEffect(() => {
         const storedUsers = localstorageUsers.getUsers();
@@ -53,6 +59,7 @@ const UserManagement = () => {
             statuses,
         });
     }, []);
+
 
     useEffect(() => {
         const filtered = users.filter((user) => {
@@ -86,6 +93,32 @@ const UserManagement = () => {
     };
 
     const handleAddUser = () => {
+        setIsModalOpen(true);
+    };
+
+    const handleTextFieldChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = event.target;
+        setNewUser(prev => (prev ? { ...prev, name: value } : undefined));
+    };
+
+    const handleSelectChange = (event: SelectChangeEvent, field: 'status' | 'department' | 'country') => {
+        const value = event.target.value;
+        setNewUser(prev => (prev ? { ...prev, [field]: { value, name: value } } : undefined));
+    };
+
+    const handleAddNewUser = () => {
+        console.log(newUser)
+        if (newUser) {
+            const updatedUsers = [...users, newUser];
+            setUsers(updatedUsers);
+            localstorageUsers.addUsers(updatedUsers);
+            console.log(updatedUsers)
+        }
+        setIsModalOpen(false);
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
     };
 
     const handleDeleteUser = (userId: string) => {
@@ -207,8 +240,19 @@ const UserManagement = () => {
                     </TableBody>
                 </Table>
             </TableContainer>
+            <UserModal
+                open={isModalOpen}
+                onClose={handleCloseModal}
+                onAddUser={handleAddNewUser}
+                users={users}
+                availableFilters={availableFilters}
+                handleTextFieldChange={handleTextFieldChange}
+                handleSelectChange={handleSelectChange}
+                newUser={newUser}
+                setNewUser={setNewUser}
+            />
         </Box>
     );
 };
 
-export default UserManagement;
+export default UsersTable;

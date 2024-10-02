@@ -1,0 +1,19 @@
+.header {
+  margin-top:20px;
+  &__content {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    &>* {
+      flex: 0 0 180px;
+    }
+    &>*:not(:last-child) {
+      margin-right: 10px;
+    }
+    margin-bottom: 20px;
+  }
+  &__hr {
+    border-top: 1px solid black;
+  }
+}

@@ -1,0 +1,42 @@
+.editTable {
+  border: 1px solid black;
+  padding: 60px 80px 80px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.header {
+  text-align: center;
+  margin: 20px;
+}
+.middleContent {
+  margin: 80px;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 40px;
+  margin-top: 20px;
+}
+
+.selectField {
+  width: 100%;
+}
+.userInfo {
+  margin: 60px 0 40px;
+}
+.buttons {
+  margin-top: 80px;
+  display: flex;
+  justify-content: flex-end;
+
+  &>*:not(:last-child) {
+    margin-right: 10px;
+  }
+}

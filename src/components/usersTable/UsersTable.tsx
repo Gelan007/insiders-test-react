@@ -1,11 +1,9 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Box,
     Button,
     Checkbox,
     FormControl,
-    FormControlLabel,
-    FormGroup,
     InputLabel,
     MenuItem,
     Select,
@@ -22,44 +20,87 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import { UserWithId } from '../../interfaces/User';
-import {getUsersWithId} from "../../data/users";
-import {localstorageUsers} from "../../utils/localstorage/localstorage";
+import { getUsersWithId } from "../../data/users";
+import { localstorageUsers } from "../../utils/localstorage/localstorage";
 
 const UserManagement = () => {
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
-    const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
-    const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
+    const [selectedFilters, setSelectedFilters] = useState({
+        departments: [] as string[],
+        countries: [] as string[],
+        statuses: [] as string[],
+    });
+    const [availableFilters, setAvailableFilters] = useState({
+        departments: [] as string[],
+        countries: [] as string[],
+        statuses: [] as string[],
+    });
     const [users, setUsers] = useState<UserWithId[]>([]);
+    const [filteredUsers, setFilteredUsers] = useState<UserWithId[]>([]);
 
     useEffect(() => {
         const storedUsers = localstorageUsers.getUsers();
-        if (storedUsers) {
-            setUsers(JSON.parse(storedUsers));
-        } else {
-            setUsers(getUsersWithId);
-        }
+        const loadedUsers: UserWithId[] = storedUsers ? JSON.parse(storedUsers) : getUsersWithId();
+        setUsers(loadedUsers);
+
+        const departments = Array.from(new Set(loadedUsers.map((user: UserWithId) => user.department.name)));
+        const countries = Array.from(new Set(loadedUsers.map((user: UserWithId) => user.country.name)));
+        const statuses = Array.from(new Set(loadedUsers.map((user: UserWithId) => user.status.name)));
+
+        setAvailableFilters({
+            departments,
+            countries,
+            statuses,
+        });
     }, []);
+
+    useEffect(() => {
+        const filtered = users.filter((user) => {
+            const matchesSearchTerm = user.name.toLowerCase().includes(searchTerm.toLowerCase());
+
+            const matchesDepartment = selectedFilters.departments.length === 0 ||
+                selectedFilters.departments.includes(user.department.name);
+
+            const matchesCountry = selectedFilters.countries.length === 0 ||
+                selectedFilters.countries.includes(user.country.name);
+
+            const matchesStatus = selectedFilters.statuses.length === 0 ||
+                selectedFilters.statuses.includes(user.status.name);
+
+            return matchesSearchTerm && matchesDepartment && matchesCountry && matchesStatus;
+        });
+
+        setFilteredUsers(filtered);
+    }, [users, searchTerm, selectedFilters]);
 
     const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSearchTerm(event.target.value);
     };
 
-    const handleMultiSelectChange = (event: SelectChangeEvent<string[]>, setter: React.Dispatch<React.SetStateAction<string[]>>) => {
+    const handleMultiSelectChange = (event: SelectChangeEvent<string[]>, filterType: keyof typeof selectedFilters) => {
         const value = event.target.value as string[];
-        setter(value);
+        setSelectedFilters((prevFilters) => ({
+            ...prevFilters,
+            [filterType]: value,
+        }));
     };
 
     const handleAddUser = () => {
     };
 
     const handleDeleteUser = (userId: string) => {
-        setUsers(users.filter(user => user.id !== userId));
+        const updatedUsers = users.filter(user => user.id !== userId);
+        setUsers(updatedUsers);
+
+        localstorageUsers.addUsers(updatedUsers);
     };
+
+
+    const isCountryStatusDisabled = selectedFilters.departments.length < 3;
 
     return (
         <Box sx={{ padding: 3 }}>
-            <Typography variant="h4" sx={{ textAlign: 'center' }}>
+            <Typography variant="h4" gutterBottom>
                 User Management
             </Typography>
             <TextField
@@ -69,20 +110,21 @@ const UserManagement = () => {
                 onChange={handleSearchChange}
                 sx={{ marginBottom: 2, width: '100%' }}
             />
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+            <Box mb={2}>
                 <Box display="flex" gap={2}>
                     <FormControl fullWidth>
                         <InputLabel id="department-label">Department</InputLabel>
                         <Select
                             labelId="department-label"
                             multiple
-                            value={selectedDepartments}
-                            onChange={(e) => handleMultiSelectChange(e, setSelectedDepartments)}
+                            value={selectedFilters.departments}
+                            onChange={(e) => handleMultiSelectChange(e, 'departments')}
                             renderValue={(selected) => selected.join(', ')}
                         >
-                            {users.map(user => (
-                                <MenuItem key={user.department.value} value={user.department.value}>
-                                    {user.department.name}
+                            {availableFilters.departments.map((department) => (
+                                <MenuItem key={department} value={department}>
+                                    <Checkbox checked={selectedFilters.departments.includes(department)} />
+                                    {department}
                                 </MenuItem>
                             ))}
                         </Select>
@@ -92,22 +134,17 @@ const UserManagement = () => {
                         <Select
                             labelId="country-label"
                             multiple
-                            value={selectedCountries}
-                            onChange={(e) => handleMultiSelectChange(e, setSelectedCountries)}
+                            value={selectedFilters.countries}
+                            onChange={(e) => handleMultiSelectChange(e, 'countries')}
                             renderValue={(selected) => selected.join(', ')}
+                            disabled={isCountryStatusDisabled}
                         >
-                            <MenuItem value="USA">
-                                <Checkbox checked={selectedCountries.includes('USA')} />
-                                USA
-                            </MenuItem>
-                            <MenuItem value="Canada">
-                                <Checkbox checked={selectedCountries.includes('Canada')} />
-                                Canada
-                            </MenuItem>
-                            <MenuItem value="Germany">
-                                <Checkbox checked={selectedCountries.includes('Germany')} />
-                                Germany
-                            </MenuItem>
+                            {availableFilters.countries.map((country) => (
+                                <MenuItem key={country} value={country}>
+                                    <Checkbox checked={selectedFilters.countries.includes(country)} />
+                                    {country}
+                                </MenuItem>
+                            ))}
                         </Select>
                     </FormControl>
                     <FormControl fullWidth>
@@ -115,43 +152,43 @@ const UserManagement = () => {
                         <Select
                             labelId="status-label"
                             multiple
-                            value={selectedStatuses}
-                            onChange={(e) => handleMultiSelectChange(e, setSelectedStatuses)}
+                            value={selectedFilters.statuses}
+                            onChange={(e) => handleMultiSelectChange(e, 'statuses')}
                             renderValue={(selected) => selected.join(', ')}
+                            disabled={isCountryStatusDisabled}
                         >
-                            <MenuItem value="Active">
-                                <Checkbox checked={selectedStatuses.includes('Active')} />
-                                Active
-                            </MenuItem>
-                            <MenuItem value="Inactive">
-                                <Checkbox checked={selectedStatuses.includes('Inactive')} />
-                                Inactive
-                            </MenuItem>
+                            {availableFilters.statuses.map((status) => (
+                                <MenuItem key={status} value={status}>
+                                    <Checkbox checked={selectedFilters.statuses.includes(status)} />
+                                    {status}
+                                </MenuItem>
+                            ))}
                         </Select>
                     </FormControl>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        startIcon={<AddIcon />}
+                        onClick={handleAddUser}
+                        sx={{ backgroundColor: '#ffffff', color: 'black', width: '400px' }}
+                    >
+                        Add User
+                    </Button>
                 </Box>
-                <Button
-                    variant="contained"
-                    color="primary"
-                    startIcon={<AddIcon />}
-                    onClick={handleAddUser}
-                >
-                    Add User
-                </Button>
             </Box>
             <TableContainer>
                 <Table aria-label="simple table">
                     <TableHead>
                         <TableRow>
-                            <TableCell>Full Name</TableCell>
-                            <TableCell>Department</TableCell>
-                            <TableCell>Country</TableCell>
-                            <TableCell>Status</TableCell>
-                            <TableCell align="right">Actions</TableCell>
+                            <TableCell sx={{fontWeight: "bold"}}>Full Name</TableCell>
+                            <TableCell sx={{fontWeight: "bold"}}>Department</TableCell>
+                            <TableCell sx={{fontWeight: "bold"}}>Country</TableCell>
+                            <TableCell sx={{fontWeight: "bold"}}>Status</TableCell>
+                            <TableCell sx={{fontWeight: "bold"}} align="right"></TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {users.map((user) => (
+                        {filteredUsers.map((user) => (
                             <TableRow key={user.id}>
                                 <TableCell>{user.name}</TableCell>
                                 <TableCell>{user.department.name}</TableCell>
@@ -163,7 +200,6 @@ const UserManagement = () => {
                                         startIcon={<DeleteIcon />}
                                         color="secondary"
                                     >
-                                        Delete
                                     </Button>
                                 </TableCell>
                             </TableRow>
